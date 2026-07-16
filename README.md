@@ -2,6 +2,8 @@
 
 A chat app that answers business questions by writing and running SQL against a local SQLite database of Walmart daily item demand. It starts as a plain text-to-SQL chain, grows into a LangGraph workflow with routing, and ends up as a Streamlit chat app. Built with LangChain, LangGraph, and OpenAI.
 
+**Try it live:** [juniomata-sql-agent.streamlit.app](https://juniomata-sql-agent-srcstreamlit-app-f3m0q2.streamlit.app/)
+
 ![SQL AI Copilot demo](images/sql_agent.gif)
 
 ## Overview
@@ -79,7 +81,9 @@ How the graph grows across the scripts:
 
 ## Running
 
-Streamlit app:
+Hosted app: no setup needed, use it directly at [juniomata-sql-agent.streamlit.app](https://juniomata-sql-agent-srcstreamlit-app-f3m0q2.streamlit.app/).
+
+Locally:
 
 ```powershell
 streamlit run 03_streamlit_bi_copilot.py
