@@ -159,8 +159,8 @@ def make_business_intelligence_agent(path: str, model: str):
 
 # STREAMLIT APP SETUP
 
-st.set_page_config(page_title="Your Business Intelligence AI Copilot")
-st.title("Your Business Intelligence AI Copilot")
+st.set_page_config(page_title="Your SQL AI Copilot")
+st.title("Your SQL AI Copilot")
 
 st.markdown("""
             I'm a handy business intelligence agent connected to the walmart_sales.db SQLite database, which contains daily item demand data (item_id, value, date). Ask me Business Intelligence questions and I'll answer with data tables or text summaries.
