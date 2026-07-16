@@ -1,44 +1,59 @@
 # SQL AI Copilot
 
-An AI-powered Business Intelligence agent, from a basic text-to-SQL chain to a routed LangGraph workflow and a chat-based Streamlit app. Built with **LangChain**, **LangGraph**, and **OpenAI**, querying a local SQLite database of Walmart daily item demand.
+A chat app that answers business questions by writing and running SQL against a local SQLite database of Walmart daily item demand. It starts as a plain text-to-SQL chain, grows into a LangGraph workflow with routing, and ends up as a Streamlit chat app. Built with LangChain, LangGraph, and OpenAI.
+
+![SQL AI Copilot demo](images/sql_agent.gif)
+
+## Why This Tool
+
+**Who it's for.** Business users who need numbers but don't write SQL: category managers, demand planners, analysts on the business side, or anyone who would otherwise file a ticket with the data team and wait. Data teams are the second audience, since every question the copilot handles is a request they don't have to pick up.
+
+**What it does for them.** You ask a question in plain English ("what were the top 10 items by demand last year?") and get back a data table or a short written summary, plus the exact SQL that produced it. No dashboard hunting, no Excel exports, no back-and-forth with an analyst.
+
+**Business impact.**
+
+- Cuts the time from question to answer from hours or days (ticket queue, analyst backlog) to seconds.
+- Frees analysts from repetitive pull-this-number requests so they can work on things that actually need judgment.
+- Showing the generated SQL keeps answers auditable: anyone can check how a number was produced instead of trusting a black box.
+- The pattern is reusable. Point it at a different database and the same agent answers questions about your own sales, inventory, or operations data.
 
 ## Dataset
 
-`data/walmart_sales.db` (SQLite) — a single table:
+`data/walmart_sales.db` (SQLite), one table:
 
 | Table | Columns | Rows | Range |
 |---|---|---|---|
-| `daily_demand` | `item_id` (TEXT), `value` (INTEGER), `date` (TEXT) | ~23,000 | 2011 – 2016 |
+| `daily_demand` | `item_id` (TEXT), `value` (INTEGER), `date` (TEXT) | ~23,000 | 2011 - 2016 |
 
 ## Components
 
-Each component exists as a Python script (repo root) and a matching executed Jupyter notebook (`notebook/`). The scripts build on each other, adding one capability at a time.
+Each step has a Python script at the repo root and a matching executed notebook in `notebook/`. Each script builds on the previous one.
 
-| # | Script | Notebook | What it adds |
+| # | Script | Notebook | What it does |
 |---|---|---|---|
-| 01 | [01_sql_agent_langgraph.py](01_sql_agent_langgraph.py) | [notebook](notebook/01_sql_agent_langgraph.ipynb) | SQL agent: `create_sql_query_chain` + SQL-extraction utility, wrapped in a LangGraph DAG that returns a Pandas DataFrame |
-| 02 | [02_add_routing_langgraph.py](02_add_routing_langgraph.py) | [notebook](notebook/02_add_routing_langgraph.ipynb) | Routing preprocessor + conditional edges: table vs. text summary |
-| 03 | [03_streamlit_bi_copilot.py](03_streamlit_bi_copilot.py) | — (Streamlit app) | "Your SQL AI Copilot" — chat UI over the full agent |
+| 01 | [01_sql_agent_langgraph.py](01_sql_agent_langgraph.py) | [notebook](notebook/01_sql_agent_langgraph.ipynb) | SQL agent with `create_sql_query_chain` and a SQL-extraction utility, wrapped in a LangGraph DAG that returns a Pandas DataFrame |
+| 02 | [02_add_routing_langgraph.py](02_add_routing_langgraph.py) | [notebook](notebook/02_add_routing_langgraph.ipynb) | Adds a routing preprocessor and conditional edges to return either a table or a text summary |
+| 03 | [03_streamlit_bi_copilot.py](03_streamlit_bi_copilot.py) | (Streamlit app, no notebook) | "Your SQL AI Copilot", a chat UI on top of the full agent |
 
 ## Workflow Diagrams
 
-The LangGraph workflow grows across the scripts:
+How the graph grows across the scripts:
 
-**01 — SQL agent as a DAG**
+**01, SQL agent as a DAG**
 
 ![SQL agent DAG](images/01_sql_agent_langgraph_dag.png)
 
-**01 — add DataFrame conversion**
+**01, with DataFrame conversion**
 
 ![SQL agent + pandas](images/01_sql_agent_langgraph_dataframe.png)
 
-**02 — add routing with conditional edges (table or summary)**
+**02, with routing and conditional edges (table or summary)**
 
 ![Routing workflow](images/02_add_routing_langgraph_graph.png)
 
 ## Setup
 
-1. **Activate the virtual environment** (Python 3.11):
+1. Activate the virtual environment (Python 3.11):
 
    ```powershell
    # PowerShell
@@ -56,7 +71,7 @@ The LangGraph workflow grows across the scripts:
    pip install -r requirements.txt
    ```
 
-2. **Add your OpenAI API key** in `credentials.yml` at the repo root (gitignored — never commit it):
+2. Put your OpenAI API key in `credentials.yml` at the repo root. The file is gitignored, keep it that way:
 
    ```yaml
    openai: sk-...
@@ -64,19 +79,19 @@ The LangGraph workflow grows across the scripts:
 
 ## Running
 
-**Streamlit copilot (03):**
+Streamlit app:
 
 ```powershell
 streamlit run 03_streamlit_bi_copilot.py
 ```
 
-Then open http://localhost:8501, pick a model in the sidebar, and ask questions like:
+Open http://localhost:8501, pick a model in the sidebar, and ask something like:
 
 - What are the top 10 items by total cumulative demand value?
 - What is the total demand value by year-month? Order chronologically.
 - What is the total demand value by year? Summarize the trend in words.
 
-**Notebooks:** open any notebook in `notebook/` with the `ask_bi_agent_venv` Jupyter kernel, or re-execute from the command line:
+Notebooks: open any notebook in `notebook/` with the `sql_agent_venv` Jupyter kernel, or re-execute from the command line:
 
 ```powershell
 cd notebook
@@ -96,6 +111,11 @@ sql_agent/
 ├── requirements.txt              # Dependencies (Streamlit Cloud installs from this)
 ├── data/
 │   └── walmart_sales.db          # SQLite: daily_demand table
-├── images/                       # Workflow diagrams (exported from notebooks)
+├── images/                       # Demo gif + workflow diagrams
 └── notebook/                     # Executed notebooks generated from the scripts
 ```
+
+## Related Projects
+
+- [Building a Multi-Agent Marketing Analytics Team That Turns Data Into Targeted Campaigns in Minutes](https://medium.com/@godfriedj98/building-a-multi-agent-marketing-analytics-team-that-turns-data-into-targeted-campaigns-in-minutes-1da49c36d9fe) (Medium)
+- [Ask BI Agent Demo](https://www.youtube.com/watch?v=tSGbzTwlXnE) (YouTube), a video demo of this copilot

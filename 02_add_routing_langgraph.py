@@ -1,4 +1,4 @@
-# # LangGraph SQL Agent + Routing — Walmart Sales
+# # LangGraph SQL Agent + Routing - Walmart Sales
 # **Goal:** Add a routing preprocessor that formats the user question and decides whether to return a table or a text summary (conditional edges)
 
 

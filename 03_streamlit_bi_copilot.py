@@ -1,4 +1,4 @@
-# BI Copilot — Walmart Sales (Streamlit App)
+# BI Copilot - Walmart Sales (Streamlit App)
 # Goal: Chat-based Business Intelligence agent that answers questions about the
 # Walmart Sales database with SQL-backed data tables and text summaries.
 #

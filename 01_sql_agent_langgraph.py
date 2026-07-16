@@ -1,5 +1,5 @@
-# # SQL Agent with LangGraph — Walmart Sales
-# **Goal:** Build a SQL agent for the Walmart Sales database — from a LangChain SQL query chain to a LangGraph DAG that executes the SQL and returns Pandas DataFrames
+# # SQL Agent with LangGraph - Walmart Sales
+# **Goal:** Build a SQL agent for the Walmart Sales database - from a LangChain SQL query chain to a LangGraph DAG that executes the SQL and returns Pandas DataFrames
 
 
 # ## Libraries
@@ -88,7 +88,7 @@ df = pd.read_sql(extract_sql_code(response), conn)
 df
 
 
-# df.to_dict(orient="records") is JSON serializable — safe to store in graph state
+# df.to_dict(orient="records") is JSON serializable - safe to store in graph state
 df.to_dict(orient="records")
 
 
