@@ -138,4 +138,20 @@ pprint(sql_q)
 pd.read_sql(sql_q, conn)
 
 
+QUESTION = "Which item had the single highest daily demand value, and on what date?"
+
+response = app.invoke({"question": QUESTION})
+sql_q = response.get("sql_query")
+pprint(sql_q)
+pd.read_sql(sql_q, conn)
+
+
+QUESTION = "What are the top 5 items by total demand value in 2015?"
+
+response = app.invoke({"question": QUESTION})
+sql_q = response.get("sql_query")
+pprint(sql_q)
+pd.read_sql(sql_q, conn)
+
+
 conn.close()

@@ -1,6 +1,6 @@
-# Ask BI Agent — SQL AI Copilot on Walmart Sales
+# SQL AI Copilot
 
-An AI-powered Business Intelligence agent — from a basic text-to-SQL chain to a routed LangGraph workflow and a chat-based Streamlit app. Built with **LangChain**, **LangGraph**, and **OpenAI**, querying a local SQLite database of Walmart daily item demand.
+An AI-powered Business Intelligence agent, from a basic text-to-SQL chain to a routed LangGraph workflow and a chat-based Streamlit app. Built with **LangChain**, **LangGraph**, and **OpenAI**, querying a local SQLite database of Walmart daily item demand.
 
 ## Dataset
 
@@ -17,27 +17,26 @@ Each component exists as a Python script (repo root) and a matching executed Jup
 | # | Script | Notebook | What it adds |
 |---|---|---|---|
 | 01 | [01_sql_agent.py](01_sql_agent.py) | [notebook](notebook/01_sql_agent.ipynb) | Basic SQL agent: `create_sql_query_chain` + SQL-extraction utility |
-| 02 | [02_sql_agent_langgraph.py](02_sql_agent_langgraph.py) | [notebook](notebook/02_sql_agent_langgraph.ipynb) | Introduction to LangGraph DAGs: wrap the SQL agent in a graph |
-| 03 | [03_sql_agent_langgraph.py](03_sql_agent_langgraph.py) | [notebook](notebook/03_sql_agent_langgraph.ipynb) | Extends the LangGraph SQL agent with a broader set of Walmart queries |
-| 04 | [04_add_pandas_langgraph.py](04_add_pandas_langgraph.py) | [notebook](notebook/04_add_pandas_langgraph.ipynb) | Executes the SQL and returns a Pandas DataFrame from graph state |
-| 05 | [05_add_routing_langgraph.py](05_add_routing_langgraph.py) | [notebook](notebook/05_add_routing_langgraph.ipynb) | Routing preprocessor + conditional edges: table vs. text summary |
-| 06 | [06_streamlit_bi_copilot.py](06_streamlit_bi_copilot.py) | — (Streamlit app) | "Your SQL AI Copilot" — chat UI over the full agent |
+| 02 | [02_sql_agent_langgraph.py](02_sql_agent_langgraph.py) | [notebook](notebook/02_sql_agent_langgraph.ipynb) | Wraps the SQL agent in a LangGraph DAG |
+| 03 | [03_add_pandas_langgraph.py](03_add_pandas_langgraph.py) | [notebook](notebook/03_add_pandas_langgraph.ipynb) | Executes the SQL and returns a Pandas DataFrame from graph state |
+| 04 | [04_add_routing_langgraph.py](04_add_routing_langgraph.py) | [notebook](notebook/04_add_routing_langgraph.ipynb) | Routing preprocessor + conditional edges: table vs. text summary |
+| 05 | [05_streamlit_bi_copilot.py](05_streamlit_bi_copilot.py) | — (Streamlit app) | "Your SQL AI Copilot" — chat UI over the full agent |
 
 ## Workflow Diagrams
 
 The LangGraph workflow grows across the scripts:
 
-**02–03 — SQL agent as a DAG**
+**02 — SQL agent as a DAG**
 
 ![SQL agent DAG](images/02_sql_agent_langgraph_graph.png)
 
-**04 — add DataFrame conversion**
+**03 — add DataFrame conversion**
 
-![SQL agent + pandas](images/04_add_pandas_langgraph_graph.png)
+![SQL agent + pandas](images/03_add_pandas_langgraph_graph.png)
 
-**05 — add routing with conditional edges (table or summary)**
+**04 — add routing with conditional edges (table or summary)**
 
-![Routing workflow](images/05_add_routing_langgraph_graph.png)
+![Routing workflow](images/04_add_routing_langgraph_graph.png)
 
 ## Setup
 
@@ -63,10 +62,10 @@ The LangGraph workflow grows across the scripts:
 
 ## Running
 
-**Streamlit copilot (06):**
+**Streamlit copilot (05):**
 
 ```powershell
-streamlit run 06_streamlit_bi_copilot.py
+streamlit run 05_streamlit_bi_copilot.py
 ```
 
 Then open http://localhost:8501, pick a model in the sidebar, and ask questions like:
@@ -90,10 +89,9 @@ cd notebook
 ask_bi_agent/
 ├── 01_sql_agent.py               # Agent scripts (source of truth)
 ├── 02_sql_agent_langgraph.py
-├── 03_sql_agent_langgraph.py
-├── 04_add_pandas_langgraph.py
-├── 05_add_routing_langgraph.py
-├── 06_streamlit_bi_copilot.py    # Streamlit chat app
+├── 03_add_pandas_langgraph.py
+├── 04_add_routing_langgraph.py
+├── 05_streamlit_bi_copilot.py    # Streamlit chat app
 ├── credentials.yml               # OpenAI API key (keep private)
 ├── data/
 │   └── walmart_sales.db          # SQLite: daily_demand table
