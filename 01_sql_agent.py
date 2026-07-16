@@ -1,14 +1,18 @@
-# SQL Agent with Walmart Sales
-# **Goal:** Create a basic SQL agent to interact with the Walmart Sales database
+# BUSINESS SCIENCE UNIVERSITY
+# PYTHON FOR GENERATIVE AI COURSE
+# ML + AI BUSINESS INTELLIGENCE (FLOW CONTROL)
+# ***
 
-# Libraries
+# Goal: Create a basic SQL agent to interact with the database
+
+# LIBRARIES
 
 # Most Important: AI
 from langchain_openai import ChatOpenAI
-from langchain_classic.chains import create_sql_query_chain
+from langchain.chains import create_sql_query_chain
 from langchain_community.utilities import SQLDatabase
 
-# Data Science
+# Next Most: Data Science 
 import pandas as pd
 import sqlalchemy as sql
 
@@ -19,111 +23,127 @@ import re
 from pprint import pprint
 from IPython.display import Markdown
 
-# AI Setup
+# AI SETUP
 
 os.environ["OPENAI_API_KEY"] = yaml.safe_load(open('../credentials.yml'))['openai']
 
-OPENAI_LLM = "gpt-4o-mini"
+OPENAI_LLM = "gpt-4o-mini" # gpt-4.1-mini, gpt-4.1-nano, gpt-4.1
 
-# 1.0 Database Setup — Walmart Sales
+# DATABASE SETUP
 
-PATH_DB = "sqlite:///../data/walmart_sales.db"
+PATH_DB = "sqlite:///database/leads_scored.db"
 
 sql_engine = sql.create_engine(PATH_DB)
+
 conn = sql_engine.connect()
 
-# Show all tables
+# select all table names
 pd.read_sql("SELECT name FROM sqlite_master WHERE type='table';", conn)
 
-# 2.0 Connect LangChain to the Database
+# * 1.0 CREATE A SIMPLE SQL DATABASE AI AGENT
+
+# * Connecting Langchain to a database
 
 db = SQLDatabase.from_uri(PATH_DB)
 
-print("Dialect:", db.dialect)
-print("Tables:", db.get_usable_table_names())
-print("\nSample data:")
-print(db.run("SELECT * FROM daily_demand LIMIT 5;"))
+db.dialect
 
-# 3.0 Create the SQL Query Chain (Agent)
+db.get_usable_table_names()
+
+db.run("SELECT * FROM leads_scored LIMIT 10;")
+
+# * Generating SQL with LLMs
 
 model = ChatOpenAI(
-    model=OPENAI_LLM,
-    temperature=0.7,
+    model = OPENAI_LLM,
+    temperature = 0.7,
 )
 
-# Create the SQL query chain
+response = model.invoke("what's the recipe for mayonnaise?")
+Markdown(response.content)
+
+# * Combine LLM and SQL Database to create a SQL Query Chain (Agent)
 chain = create_sql_query_chain(model, db)
+
 chain
 
-response = chain.invoke({'question': "What are the top 10 items by total cumulative demand value?"})
+response = chain.invoke({'question': "which 5 customers have the highest p1 probability of purchase?"})
+
 pprint(response)
+
 Markdown(response)
 
-# 4.0 SQL Parsing Utility
+# Error: Malformed SQL
+pprint(db.run(response))
 
-def extract_sql_code(text: str):
-    if not text:
-        return None
-    m = re.search(r"SQLQuery:\s*```sql\s*([\s\S]+?)```", text, re.IGNORECASE)
-    if m: return m.group(1).strip()
-    m = re.search(r"```sql\s*([\s\S]+?)```", text, re.IGNORECASE)
-    if m: return m.group(1).strip()
-    m = re.search(r"```[\w]*\s*(SELECT[\s\S]+?)```", text, re.IGNORECASE)
-    if m: return m.group(1).strip()
-    m = re.search(r"SQLQuery:\s*(SELECT[\s\S]+?)(?:\n\n|$)", text, re.IGNORECASE)
-    if m: return m.group(1).strip()
-    m = re.search(r"(SELECT[\s\S]+?)(?:;|\n\n|$)", text, re.IGNORECASE)
-    if m: return m.group(1).strip().rstrip(';')
-    return None
-    m = re.search(r"SQLQuery:\s*```sql\s*([\s\S]+?)```", text, re.IGNORECASE)
-    if m: return m.group(1).strip()
-    m = re.search(r"```sql\s*([\s\S]+?)```", text, re.IGNORECASE)
-    if m: return m.group(1).strip()
-    m = re.search(r"```[\w]*\s*(SELECT[\s\S]+?)```", text, re.IGNORECASE)
-    if m: return m.group(1).strip()
-    m = re.search(r"SQLQuery:\s*(SELECT[\s\S]+?)(?:\n\n|$)", text, re.IGNORECASE)
-    if m: return m.group(1).strip()
-    m = re.search(r"(SELECT[\s\S]+?)(?:;|\n\n|$)", text, re.IGNORECASE)
-    if m: return m.group(1).strip().rstrip(';')
-    return None
-    # 1) SQLQuery: ```sql ... ```
-    m = re.search(r"SQLQuery:\s*```sql\s*([\s\S]+?)```", text, re.IGNORECASE)
-    if m:
-        return m.group(1).strip()
-    # 2) ```sql ... ```
-    m = re.search(r"```sql\s*([\s\S]+?)```", text, re.IGNORECASE)
-    if m:
-        return m.group(1).strip()
-    # 3) ``` ... ``` containing SELECT
-    m = re.search(r"```[\w]*\s*(SELECT[\s\S]+?)```", text, re.IGNORECASE)
-    if m:
-        return m.group(1).strip()
-    # 4) SQLQuery: SELECT ... (no fence)
-    m = re.search(r"SQLQuery:\s*(SELECT[\s\S]+?)(?:\n\n|$)", text, re.IGNORECASE)
-    if m:
-        return m.group(1).strip()
-    # 5) Bare SELECT ...
-    m = re.search(r"(SELECT[\s\S]+?)(?:;|\n\n|$)", text, re.IGNORECASE)
-    if m:
-        return m.group(1).strip().rstrip(";")
+# * Parsing SQL Utility Function
+
+def extract_sql_code(text: str) -> str | None:
+    """
+    Extracts the SQL query from a block of text. Handles:
+      1) SQLQuery: ```sql ...``` fences
+      2) ```sql ...``` fences
+      3) ``` … ``` fences containing a SELECT
+      4) SQLQuery: … (no fences)
+      5) Bare SELECT …; up to semicolon
+    Returns the SQL (trimmed), or None if no query found.
+    """
+    patterns = [
+        # 1) SQLQuery: ```sql ...```
+        r"SQLQuery:\s*```sql\s*(?P<sql>[\s\S]+?)```",
+        # 2) ```sql ...```
+        r"```sql\s*(?P<sql>[\s\S]+?)```",
+        # 3) ``` … ``` containing SELECT
+        r"```(?:[\s\S]*?)\s*(?P<sql>SELECT[\s\S]+?)```",
+        # 4) SQLQuery: … (grab until a blank line or end)
+        r"SQLQuery:\s*(?P<sql>[\s\S]+?)(?=\n\s*\n|$)",
+        # 5) Bare SELECT …; up to semicolon
+        r"(?P<sql>SELECT[\s\S]+?;)(?=\s|$)",
+    ]
+
+    for pat in patterns:
+        m = re.search(pat, text, re.IGNORECASE)
+        if m:
+            sql = m.group("sql").strip()
+            # strip any wrapping quotes
+            if (sql.startswith(("'", '"')) and sql.endswith(("'", '"'))):
+                sql = sql[1:-1].strip()
+            return sql
+
     return None
 
 pprint(extract_sql_code(response))
+
 Markdown(f"```sql\n{extract_sql_code(response)}\n```")
 
-# Run extracted SQL against DB
+# No Error now
 pprint(db.run(extract_sql_code(response)))
 
-# 5.0 Additional Questions
+# * 2.0 CREATE A PANDAS SQL DATABASE AGENT
 
-# Total demand value aggregated by year-month
-q = chain.invoke({'question': "What is the total demand value by year-month? Order results chronologically."})
-sql_q = extract_sql_code(q)
-pprint(sql_q)
-pd.read_sql(sql_q, conn)
+# * Working with Pandas
 
-# Top items by average daily demand
-q2 = chain.invoke({'question': "Which 10 items have the highest average daily demand value?"})
-sql_q2 = extract_sql_code(q2)
-pprint(sql_q2)
-pd.read_sql(sql_q2, conn)
+# Which 5 customers have the highest p1 probability of purchase and have not purchased yet?
+
+response = chain.invoke({'question': "Which 5 customers have the highest p1 probability of purchase but have not yet purchased anything?"})
+
+
+Markdown(f"```sql\n{extract_sql_code(response)}\n```")
+
+
+pd.read_sql(extract_sql_code(response), conn)
+
+
+# Which countries have the most purchases?
+
+response = chain.invoke({'question': "Which countries have the highest average p1 lead score?"})
+
+
+Markdown(f"```sql\n{extract_sql_code(response)}\n```")
+
+
+pd.read_sql(extract_sql_code(response), conn)
+
+# Close connection
+conn.close()
+
