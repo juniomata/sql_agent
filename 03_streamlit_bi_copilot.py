@@ -26,7 +26,10 @@ import yaml
 
 # AI SETUP
 
-os.environ["OPENAI_API_KEY"] = yaml.safe_load(open('credentials.yml'))['openai']
+if os.path.exists('credentials.yml'):
+    os.environ["OPENAI_API_KEY"] = yaml.safe_load(open('credentials.yml'))['openai']
+else:
+    os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
 
 MODEL_LIST = ['gpt-4o-mini', 'gpt-4.1-mini', 'gpt-4.1-nano', 'gpt-4.1', 'gpt-4o']
 
