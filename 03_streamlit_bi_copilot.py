@@ -162,7 +162,7 @@ def make_business_intelligence_agent(path: str, model: str):
 
 # STREAMLIT APP SETUP
 
-st.set_page_config(page_title="Your SQL AI Copilot")
+st.set_page_config(page_title="Your SQL AI Copilot", page_icon="images/juniodata-logo-sq.png")
 st.title("Your SQL AI Copilot")
 
 st.markdown("""
@@ -175,6 +175,9 @@ model_option = st.sidebar.selectbox(
     MODEL_LIST,
     index=0
 )
+
+st.sidebar.markdown("---")
+st.sidebar.caption("© 2026 Godfried Junio Matahelemual")
 
 # AGENT
 
