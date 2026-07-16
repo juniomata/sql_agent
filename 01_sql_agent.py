@@ -30,7 +30,7 @@ os.environ["OPENAI_API_KEY"] = yaml.safe_load(open('credentials.yml'))['openai']
 OPENAI_LLM = "gpt-4o-mini"
 
 
-# ## 1.0 Database Setup — Walmart Sales
+# ## 1. Database Setup — Walmart Sales
 
 
 PATH_DB = "sqlite:///data/walmart_sales.db"
@@ -42,7 +42,7 @@ conn = sql_engine.connect()
 pd.read_sql("SELECT name FROM sqlite_master WHERE type='table';", conn)
 
 
-# ## 2.0 Connect LangChain to the Database
+# ## 2. Connect LangChain to the Database
 
 
 db = SQLDatabase.from_uri(PATH_DB)
@@ -53,7 +53,7 @@ print("\nSample data:")
 print(db.run("SELECT * FROM daily_demand LIMIT 5;"))
 
 
-# ## 3.0 Create the SQL Query Chain (Agent)
+# ## 3. Create the SQL Query Chain (Agent)
 
 
 model = ChatOpenAI(
@@ -71,7 +71,7 @@ pprint(response)
 Markdown(response)
 
 
-# ## 4.0 SQL Parsing Utility
+# ## 4. SQL Parsing Utility
 
 
 def extract_sql_code(text: str):
@@ -97,7 +97,7 @@ pprint(extract_sql_code(response))
 pprint(db.run(extract_sql_code(response)))
 
 
-# ## 5.0 Additional Questions
+# ## 5. Additional Questions
 
 
 # Total demand value aggregated by year-month

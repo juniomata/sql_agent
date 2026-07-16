@@ -29,7 +29,7 @@ os.environ["OPENAI_API_KEY"] = yaml.safe_load(open('credentials.yml'))['openai']
 llm = ChatOpenAI(model="gpt-4o-mini")
 
 
-# ## 1.0 SQL Database Setup
+# ## 1. SQL Database Setup
 
 
 PATH_DB = "sqlite:///data/walmart_sales.db"
@@ -42,7 +42,7 @@ db = SQLDatabase.from_uri(PATH_DB)
 print("Tables:", db.get_usable_table_names())
 
 
-# ## 2.0 SQL Parsing Utility
+# ## 2. SQL Parsing Utility
 
 
 def extract_sql_code(text: str):
@@ -62,7 +62,7 @@ def extract_sql_code(text: str):
     return None
 
 
-# ## 3.0 SQL Agent + DataFrame Conversion
+# ## 3. SQL Agent + DataFrame Conversion
 
 
 sql_generator = create_sql_query_chain(
@@ -88,7 +88,7 @@ df.to_dict(orient="records")
 pd.DataFrame(df.to_dict(orient="records"))
 
 
-# ## 4.0 LangGraph Workflow
+# ## 4. LangGraph Workflow
 
 
 class GraphState(TypedDict):
@@ -138,7 +138,7 @@ app = workflow.compile()
 app
 
 
-# ## 5.0 Testing the Graph
+# ## 5. Testing the Graph
 
 
 QUESTION = "Which 10 items have the highest total cumulative demand value?"

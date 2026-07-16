@@ -34,7 +34,7 @@ os.environ["OPENAI_API_KEY"] = yaml.safe_load(open('credentials.yml'))['openai']
 llm = ChatOpenAI(model="gpt-4o-mini")
 
 
-# ## 1.0 SQL Database Setup
+# ## 1. SQL Database Setup
 
 
 PATH_DB = "sqlite:///data/walmart_sales.db"
@@ -47,7 +47,7 @@ db = SQLDatabase.from_uri(PATH_DB)
 print("Tables:", db.get_usable_table_names())
 
 
-# ## 2.0 SQL Parsing Utility
+# ## 2. SQL Parsing Utility
 
 
 def extract_sql_code(text: str):
@@ -67,7 +67,7 @@ def extract_sql_code(text: str):
     return None
 
 
-# ## 3.0 Routing Preprocessor Agent (AKA The Bouncer)
+# ## 3. Routing Preprocessor Agent (AKA The Bouncer)
 # Used to format the user's question for the SQL generator and decide how the output is returned (table or text summary)
 
 
@@ -114,7 +114,7 @@ response = routing_preprocessor.invoke({"initial_question": QUESTION})
 pprint(response)
 
 
-# ## 4.0 SQL Agent
+# ## 4. SQL Agent
 
 
 sql_generator = create_sql_query_chain(
@@ -126,7 +126,7 @@ sql_generator = create_sql_query_chain(
 sql_generator
 
 
-# ## 5.0 Summarizer Agent
+# ## 5. Summarizer Agent
 # Used when the router decides the user wants a text summary instead of a table
 
 
@@ -144,7 +144,7 @@ summarizer_prompt = PromptTemplate(
 summarizer = summarizer_prompt | llm | StrOutputParser()
 
 
-# ## 6.0 LangGraph Workflow with Conditional Edges
+# ## 6. LangGraph Workflow with Conditional Edges
 
 
 class GraphState(TypedDict):
@@ -246,7 +246,7 @@ app = workflow.compile()
 app
 
 
-# ## 7.0 Testing the Graph
+# ## 7. Testing the Graph
 
 
 QUESTION = "What are the top 10 items by total cumulative demand value?"

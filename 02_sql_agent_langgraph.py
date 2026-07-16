@@ -29,7 +29,7 @@ os.environ["OPENAI_API_KEY"] = yaml.safe_load(open('credentials.yml'))['openai']
 llm = ChatOpenAI(model="gpt-4o-mini")
 
 
-# ## 1.0 SQL Agent — Walmart Sales Database
+# ## 1. SQL Agent — Walmart Sales Database
 
 
 PATH_DB = "sqlite:///data/walmart_sales.db"
@@ -48,7 +48,7 @@ sql_generator = create_sql_query_chain(
 print("Tables:", db.get_usable_table_names())
 
 
-# ## 2.0 SQL Parsing Utility
+# ## 2. SQL Parsing Utility
 
 
 def extract_sql_code(text: str):
@@ -75,7 +75,7 @@ pprint(sql_q)
 pd.read_sql(sql_q, conn)
 
 
-# ## 3.0 Build a LangGraph DAG
+# ## 3. Build a LangGraph DAG
 
 
 class GraphState(TypedDict):
@@ -112,7 +112,7 @@ app = workflow.compile()
 app
 
 
-# ## 4.0 Testing the Graph
+# ## 4. Testing the Graph
 
 
 QUESTION = "What are the top 10 items by total cumulative demand value?"
