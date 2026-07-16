@@ -1,5 +1,5 @@
-# # SQL Agent with LangGraph — Walmart Sales (Part 2)
-# **Goal:** Reinforce the LangGraph SQL agent pattern with additional Walmart Sales queries
+# # SQL Agent with LangGraph — Walmart Sales (Extended Queries)
+# **Goal:** Run the LangGraph SQL agent across a broader set of Walmart Sales queries
 
 
 # ## Libraries
