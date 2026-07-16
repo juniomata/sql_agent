@@ -2,7 +2,7 @@
 
 A chat app that answers business questions by writing and running SQL against a local SQLite database of Walmart daily item demand. It starts as a plain text-to-SQL chain, grows into a LangGraph workflow with routing, and ends up as a Streamlit chat app. Built with LangChain, LangGraph, and OpenAI.
 
-**Try it live:** [juniomata-sql-agent.streamlit.app](https://juniomata-sql-agent-srcstreamlit-app-f3m0q2.streamlit.app/)
+**Try it live:** [sqlagent-walmartdata.streamlit.app](https://sqlagent-walmartdata.streamlit.app/)
 
 ![SQL AI Copilot demo](images/sql_agent.gif)
 
@@ -81,7 +81,7 @@ How the graph grows across the scripts:
 
 ## Running
 
-Hosted app: no setup needed, use it directly at [juniomata-sql-agent.streamlit.app](https://juniomata-sql-agent-srcstreamlit-app-f3m0q2.streamlit.app/).
+Hosted app: no setup needed, use it directly at [sqlagent-walmartdata.streamlit.app](https://sqlagent-walmartdata.streamlit.app/).
 
 Locally:
 
@@ -103,21 +103,6 @@ cd notebook
 ```
 
 > Notebooks use `../`-relative paths (they run from `notebook/`); the scripts use repo-root-relative paths.
-
-## Project Structure
-
-```
-sql_agent/
-├── 01_sql_agent_langgraph.py     # Agent scripts (source of truth)
-├── 02_add_routing_langgraph.py
-├── 03_streamlit_bi_copilot.py    # Streamlit chat app
-├── credentials.yml               # OpenAI API key (gitignored, keep private)
-├── requirements.txt              # Dependencies (Streamlit Cloud installs from this)
-├── data/
-│   └── walmart_sales.db          # SQLite: daily_demand table
-├── images/                       # Demo gif + workflow diagrams
-└── notebook/                     # Executed notebooks generated from the scripts
-```
 
 ## Related Projects
 
