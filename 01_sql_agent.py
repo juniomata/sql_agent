@@ -119,11 +119,9 @@ Markdown(f"```sql\n{extract_sql_code(response)}\n```")
 # No Error now
 pprint(db.run(extract_sql_code(response)))
 
-# * 2.0 CREATE A PANDAS SQL DATABASE AGENT
+# * 2.0 ADDITIONAL QUERIES — WALMART SALES
 
-# * Working with Pandas
-
-# Which 5 customers have the highest p1 probability of purchase and have not purchased yet?
+# Total demand value by year-month
 
 response = chain.invoke({'question': "What is the total demand value by year-month? Order results chronologically."})
 
@@ -134,7 +132,7 @@ Markdown(f"```sql\n{extract_sql_code(response)}\n```")
 pd.read_sql(extract_sql_code(response), conn)
 
 
-# Which countries have the most purchases?
+# Top 10 items by average daily demand
 
 response = chain.invoke({'question': "Which 10 items have the highest average daily demand value?"})
 
