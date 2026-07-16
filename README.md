@@ -4,7 +4,7 @@ A chat app that answers business questions by writing and running SQL against a 
 
 ![SQL AI Copilot demo](images/sql_agent.gif)
 
-## Why This Tool
+## Overview
 
 **Who it's for.** Business users who need numbers but don't write SQL: category managers, demand planners, analysts on the business side, or anyone who would otherwise file a ticket with the data team and wait. Data teams are the second audience, since every question the copilot handles is a request they don't have to pick up.
 
@@ -117,5 +117,5 @@ sql_agent/
 
 ## Related Projects
 
-- [Building a Multi-Agent Marketing Analytics Team That Turns Data Into Targeted Campaigns in Minutes](https://medium.com/@godfriedj98/building-a-multi-agent-marketing-analytics-team-that-turns-data-into-targeted-campaigns-in-minutes-1da49c36d9fe) (Medium)
-- [Ask BI Agent Demo](https://www.youtube.com/watch?v=tSGbzTwlXnE) (YouTube), a video demo of this copilot
+- [Building a Multi-Agent Marketing Analytics Team That Turns Data Into Targeted Campaigns in Minutes](https://medium.com/@godfriedj98/building-a-multi-agent-marketing-analytics-team-that-turns-data-into-targeted-campaigns-in-minutes-1da49c36d9fe) 
+- [Ask BI Agent Demo](https://www.youtube.com/watch?v=tSGbzTwlXnE)
