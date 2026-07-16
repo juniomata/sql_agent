@@ -24,13 +24,13 @@ from IPython.display import Markdown, display
 
 # AI Setup
 
-os.environ["OPENAI_API_KEY"] = yaml.safe_load(open('../credentials.yml'))['openai']
+os.environ["OPENAI_API_KEY"] = yaml.safe_load(open('credentials.yml'))['openai']
 
 llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 
 # 1.0 Database Connection — Walmart Sales
 
-PATH_DB = "sqlite:///../data/walmart_sales.db"
+PATH_DB = "sqlite:///data/walmart_sales.db"
 
 sql_engine = sql.create_engine(PATH_DB)
 conn = sql_engine.connect()
@@ -54,38 +54,6 @@ def extract_sql_code(text: str):
     if m: return m.group(1).strip()
     m = re.search(r"(SELECT[\s\S]+?)(?:;|\n\n|$)", text, re.IGNORECASE)
     if m: return m.group(1).strip().rstrip(';')
-    return None
-    m = re.search(r"SQLQuery:\s*```sql\s*([\s\S]+?)```", text, re.IGNORECASE)
-    if m: return m.group(1).strip()
-    m = re.search(r"```sql\s*([\s\S]+?)```", text, re.IGNORECASE)
-    if m: return m.group(1).strip()
-    m = re.search(r"```[\w]*\s*(SELECT[\s\S]+?)```", text, re.IGNORECASE)
-    if m: return m.group(1).strip()
-    m = re.search(r"SQLQuery:\s*(SELECT[\s\S]+?)(?:\n\n|$)", text, re.IGNORECASE)
-    if m: return m.group(1).strip()
-    m = re.search(r"(SELECT[\s\S]+?)(?:;|\n\n|$)", text, re.IGNORECASE)
-    if m: return m.group(1).strip().rstrip(';')
-    return None
-    # 1) SQLQuery: ```sql ... ```
-    m = re.search(r"SQLQuery:\s*```sql\s*([\s\S]+?)```", text, re.IGNORECASE)
-    if m:
-        return m.group(1).strip()
-    # 2) ```sql ... ```
-    m = re.search(r"```sql\s*([\s\S]+?)```", text, re.IGNORECASE)
-    if m:
-        return m.group(1).strip()
-    # 3) ``` ... ``` containing SELECT
-    m = re.search(r"```[\w]*\s*(SELECT[\s\S]+?)```", text, re.IGNORECASE)
-    if m:
-        return m.group(1).strip()
-    # 4) SQLQuery: SELECT ... (no fence)
-    m = re.search(r"SQLQuery:\s*(SELECT[\s\S]+?)(?:\n\n|$)", text, re.IGNORECASE)
-    if m:
-        return m.group(1).strip()
-    # 5) Bare SELECT ...
-    m = re.search(r"(SELECT[\s\S]+?)(?:;|\n\n|$)", text, re.IGNORECASE)
-    if m:
-        return m.group(1).strip().rstrip(";")
     return None
 
 

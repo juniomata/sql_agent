@@ -14,25 +14,40 @@
 
 from langchain_openai import ChatOpenAI
 from langchain_community.utilities import SQLDatabase
-from langchain.chains import create_sql_query_chain
+from langchain_classic.chains import create_sql_query_chain
 
 # * New: LangGraph
 from langgraph.graph import END, StateGraph
 from typing import TypedDict
 
+import re
 import pandas as pd
 import sqlalchemy as sql
 import os
 import yaml
 from pprint import pprint
 
-# * New: Import extract_sql_code (modular approach)
-from business_intelligence_agent.utils import extract_sql_code
+# * extract_sql_code defined locally
+def extract_sql_code(text: str):
+    if not text:
+        return None
+    import re as _re
+    for pat in [
+        r"SQLQuery:\s*```sql\s*([\s\S]+?)```",
+        r"```sql\s*([\s\S]+?)```",
+        r"```[\w]*\s*(SELECT[\s\S]+?)```",
+        r"SQLQuery:\s*(SELECT[\s\S]+?)(?:\n\n|$)",
+        r"(SELECT[\s\S]+?)(?:;|\n\n|$)",
+    ]:
+        m = _re.search(pat, text, _re.IGNORECASE)
+        if m:
+            return m.group(1).strip().rstrip(";")
+    return None
 
 
 # AI SETUP
 
-os.environ["OPENAI_API_KEY"] = yaml.safe_load(open('../credentials.yml'))['openai']
+os.environ["OPENAI_API_KEY"] = yaml.safe_load(open('credentials.yml'))['openai']
 
 OPENAI_LLM = ChatOpenAI(
     model = "gpt-4o-mini"
@@ -42,7 +57,7 @@ llm = OPENAI_LLM
 
 # SQL DATABASE SETUP
 
-PATH_DB = "sqlite:///database/leads_scored.db"
+PATH_DB = "sqlite:///data/walmart_sales.db"
 
 sql_engine = sql.create_engine(PATH_DB)
 
@@ -62,14 +77,14 @@ sql_generator = create_sql_query_chain(
 
 sql_generator
 
-response = sql_generator.invoke({"question": "which 10 customers have the highest p1 probability of purchase?"})
+response = sql_generator.invoke({"question": "What are the top 10 items by total cumulative demand value?"})
 
 pprint(extract_sql_code(response))
 
 pd.read_sql(extract_sql_code(response), conn)
 
 
-response = sql_generator.invoke({"question": "what tables are in the database?"})
+response = sql_generator.invoke({"question": "What are the unique item categories in the daily_demand table?"})
 
 pprint(extract_sql_code(response))
 
@@ -121,7 +136,7 @@ app
 # * TESTING
 
 QUESTION = """
-Which 10 customers have the highest p1 probability of purchase?
+What are the top 10 items by total cumulative demand value?
 """
 
 response = app.invoke({"question": QUESTION})
@@ -135,7 +150,7 @@ db.run(response['sql_query'])
 
 
 QUESTION = """
-Extract the transactions table. Return all rows.
+What is the total demand value grouped by year and month? Order chronologically.
 """
 
 
@@ -148,7 +163,7 @@ db.run(response.get("sql_query"))
 
     
 QUESTION = """
-What are the total sales by month-year?
+What are the total sales by month-year for the daily_demand table?
 """
 response = app.invoke({"question": QUESTION})
 response

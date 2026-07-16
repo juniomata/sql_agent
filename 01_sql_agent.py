@@ -9,7 +9,7 @@
 
 # Most Important: AI
 from langchain_openai import ChatOpenAI
-from langchain.chains import create_sql_query_chain
+from langchain_classic.chains import create_sql_query_chain
 from langchain_community.utilities import SQLDatabase
 
 # Next Most: Data Science 
@@ -25,13 +25,13 @@ from IPython.display import Markdown
 
 # AI SETUP
 
-os.environ["OPENAI_API_KEY"] = yaml.safe_load(open('../credentials.yml'))['openai']
+os.environ["OPENAI_API_KEY"] = yaml.safe_load(open('credentials.yml'))['openai']
 
 OPENAI_LLM = "gpt-4o-mini" # gpt-4.1-mini, gpt-4.1-nano, gpt-4.1
 
 # DATABASE SETUP
 
-PATH_DB = "sqlite:///database/leads_scored.db"
+PATH_DB = "sqlite:///data/walmart_sales.db"
 
 sql_engine = sql.create_engine(PATH_DB)
 
@@ -50,7 +50,7 @@ db.dialect
 
 db.get_usable_table_names()
 
-db.run("SELECT * FROM leads_scored LIMIT 10;")
+db.run("SELECT * FROM daily_demand LIMIT 10;")
 
 # * Generating SQL with LLMs
 
@@ -67,7 +67,7 @@ chain = create_sql_query_chain(model, db)
 
 chain
 
-response = chain.invoke({'question': "which 5 customers have the highest p1 probability of purchase?"})
+response = chain.invoke({'question': "What are the top 10 items by total cumulative demand value?"})
 
 pprint(response)
 
@@ -125,7 +125,7 @@ pprint(db.run(extract_sql_code(response)))
 
 # Which 5 customers have the highest p1 probability of purchase and have not purchased yet?
 
-response = chain.invoke({'question': "Which 5 customers have the highest p1 probability of purchase but have not yet purchased anything?"})
+response = chain.invoke({'question': "What is the total demand value by year-month? Order results chronologically."})
 
 
 Markdown(f"```sql\n{extract_sql_code(response)}\n```")
@@ -136,7 +136,7 @@ pd.read_sql(extract_sql_code(response), conn)
 
 # Which countries have the most purchases?
 
-response = chain.invoke({'question': "Which countries have the highest average p1 lead score?"})
+response = chain.invoke({'question': "Which 10 items have the highest average daily demand value?"})
 
 
 Markdown(f"```sql\n{extract_sql_code(response)}\n```")
