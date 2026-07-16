@@ -52,9 +52,13 @@ The LangGraph workflow grows across the scripts:
    source venv/Scripts/activate
    ```
 
-   Key packages: `langchain-openai`, `langchain-classic`, `langchain-community`, `langgraph`, `pandas`, `sqlalchemy`, `streamlit`, `jupyter`.
+   Or create a fresh environment and install dependencies:
 
-2. **Add your OpenAI API key** in `credentials.yml` at the repo root:
+   ```powershell
+   pip install -r requirements.txt
+   ```
+
+2. **Add your OpenAI API key** in `credentials.yml` at the repo root (gitignored — never commit it):
 
    ```yaml
    openai: sk-...
@@ -92,7 +96,8 @@ ask_bi_agent/
 ├── 03_add_pandas_langgraph.py
 ├── 04_add_routing_langgraph.py
 ├── 05_streamlit_bi_copilot.py    # Streamlit chat app
-├── credentials.yml               # OpenAI API key (keep private)
+├── credentials.yml               # OpenAI API key (gitignored, keep private)
+├── requirements.txt              # Dependencies (Streamlit Cloud installs from this)
 ├── data/
 │   └── walmart_sales.db          # SQLite: daily_demand table
 ├── images/                       # Workflow diagrams (exported from notebooks)
