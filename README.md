@@ -16,27 +16,25 @@ Each component exists as a Python script (repo root) and a matching executed Jup
 
 | # | Script | Notebook | What it adds |
 |---|---|---|---|
-| 01 | [01_sql_agent.py](01_sql_agent.py) | [notebook](notebook/01_sql_agent.ipynb) | Basic SQL agent: `create_sql_query_chain` + SQL-extraction utility |
-| 02 | [02_sql_agent_langgraph.py](02_sql_agent_langgraph.py) | [notebook](notebook/02_sql_agent_langgraph.ipynb) | Wraps the SQL agent in a LangGraph DAG |
-| 03 | [03_add_pandas_langgraph.py](03_add_pandas_langgraph.py) | [notebook](notebook/03_add_pandas_langgraph.ipynb) | Executes the SQL and returns a Pandas DataFrame from graph state |
-| 04 | [04_add_routing_langgraph.py](04_add_routing_langgraph.py) | [notebook](notebook/04_add_routing_langgraph.ipynb) | Routing preprocessor + conditional edges: table vs. text summary |
-| 05 | [05_streamlit_bi_copilot.py](05_streamlit_bi_copilot.py) | — (Streamlit app) | "Your SQL AI Copilot" — chat UI over the full agent |
+| 01 | [01_sql_agent_langgraph.py](01_sql_agent_langgraph.py) | [notebook](notebook/01_sql_agent_langgraph.ipynb) | SQL agent: `create_sql_query_chain` + SQL-extraction utility, wrapped in a LangGraph DAG that returns a Pandas DataFrame |
+| 02 | [02_add_routing_langgraph.py](02_add_routing_langgraph.py) | [notebook](notebook/02_add_routing_langgraph.ipynb) | Routing preprocessor + conditional edges: table vs. text summary |
+| 03 | [03_streamlit_bi_copilot.py](03_streamlit_bi_copilot.py) | — (Streamlit app) | "Your SQL AI Copilot" — chat UI over the full agent |
 
 ## Workflow Diagrams
 
 The LangGraph workflow grows across the scripts:
 
-**02 — SQL agent as a DAG**
+**01 — SQL agent as a DAG**
 
-![SQL agent DAG](images/02_sql_agent_langgraph_graph.png)
+![SQL agent DAG](images/01_sql_agent_langgraph_dag.png)
 
-**03 — add DataFrame conversion**
+**01 — add DataFrame conversion**
 
-![SQL agent + pandas](images/03_add_pandas_langgraph_graph.png)
+![SQL agent + pandas](images/01_sql_agent_langgraph_dataframe.png)
 
-**04 — add routing with conditional edges (table or summary)**
+**02 — add routing with conditional edges (table or summary)**
 
-![Routing workflow](images/04_add_routing_langgraph_graph.png)
+![Routing workflow](images/02_add_routing_langgraph_graph.png)
 
 ## Setup
 
@@ -66,10 +64,10 @@ The LangGraph workflow grows across the scripts:
 
 ## Running
 
-**Streamlit copilot (05):**
+**Streamlit copilot (03):**
 
 ```powershell
-streamlit run 05_streamlit_bi_copilot.py
+streamlit run 03_streamlit_bi_copilot.py
 ```
 
 Then open http://localhost:8501, pick a model in the sidebar, and ask questions like:
@@ -82,7 +80,7 @@ Then open http://localhost:8501, pick a model in the sidebar, and ask questions 
 
 ```powershell
 cd notebook
-..\venv\Scripts\python.exe -m jupyter nbconvert --to notebook --execute --inplace 01_sql_agent.ipynb
+..\venv\Scripts\python.exe -m jupyter nbconvert --to notebook --execute --inplace 01_sql_agent_langgraph.ipynb
 ```
 
 > Notebooks use `../`-relative paths (they run from `notebook/`); the scripts use repo-root-relative paths.
@@ -90,12 +88,10 @@ cd notebook
 ## Project Structure
 
 ```
-ask_bi_agent/
-├── 01_sql_agent.py               # Agent scripts (source of truth)
-├── 02_sql_agent_langgraph.py
-├── 03_add_pandas_langgraph.py
-├── 04_add_routing_langgraph.py
-├── 05_streamlit_bi_copilot.py    # Streamlit chat app
+sql_agent/
+├── 01_sql_agent_langgraph.py     # Agent scripts (source of truth)
+├── 02_add_routing_langgraph.py
+├── 03_streamlit_bi_copilot.py    # Streamlit chat app
 ├── credentials.yml               # OpenAI API key (gitignored, keep private)
 ├── requirements.txt              # Dependencies (Streamlit Cloud installs from this)
 ├── data/

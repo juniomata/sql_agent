@@ -2,7 +2,7 @@
 # Goal: Chat-based Business Intelligence agent that answers questions about the
 # Walmart Sales database with SQL-backed data tables and text summaries.
 #
-# Run with: streamlit run 05_streamlit_bi_copilot.py
+# Run with: streamlit run 03_streamlit_bi_copilot.py
 
 # LIBRARIES
 

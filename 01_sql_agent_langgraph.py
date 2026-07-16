@@ -1,5 +1,5 @@
-# # LangGraph SQL Agent + Pandas — Walmart Sales
-# **Goal:** Extend the LangGraph SQL agent with a node that executes the SQL and returns a Pandas DataFrame
+# # SQL Agent with LangGraph — Walmart Sales
+# **Goal:** Build a SQL agent for the Walmart Sales database — from a LangChain SQL query chain to a LangGraph DAG that executes the SQL and returns Pandas DataFrames
 
 
 # ## Libraries
@@ -37,9 +37,16 @@ PATH_DB = "sqlite:///data/walmart_sales.db"
 sql_engine = sql.create_engine(PATH_DB)
 conn = sql_engine.connect()
 
+# Show all tables
+pd.read_sql("SELECT name FROM sqlite_master WHERE type='table';", conn)
+
+
 db = SQLDatabase.from_uri(PATH_DB)
 
+print("Dialect:", db.dialect)
 print("Tables:", db.get_usable_table_names())
+print("\nSample data:")
+print(db.run("SELECT * FROM daily_demand LIMIT 5;"))
 
 
 # ## 2. SQL Parsing Utility
@@ -88,15 +95,13 @@ df.to_dict(orient="records")
 pd.DataFrame(df.to_dict(orient="records"))
 
 
-# ## 4. LangGraph Workflow
+# ## 4. Build a LangGraph DAG
 
 
 class GraphState(TypedDict):
     """Represents the state of our graph."""
     question: str
     sql_query: str
-    # New: DataFrame stored as records
-    data: dict
 
 
 def generate_sql(state):
@@ -105,6 +110,45 @@ def generate_sql(state):
     sql_query = sql_generator.invoke({"question": question})
     sql_query = extract_sql_code(sql_query)
     return {"sql_query": sql_query}
+
+
+def state_printer(state):
+    """Print the state."""
+    print("---STATE PRINTER---")
+    print(f"question: {state.get('question')}")
+    pprint(f"SQL Query:\n{state.get('sql_query')}")
+
+
+workflow = StateGraph(GraphState)
+
+workflow.add_node("generate_sql", generate_sql)
+workflow.add_node("state_printer", state_printer)
+
+workflow.set_entry_point("generate_sql")
+workflow.add_edge("generate_sql", "state_printer")
+workflow.add_edge("state_printer", END)
+
+app = workflow.compile()
+app
+
+
+QUESTION = "What are the top 10 items by total cumulative demand value?"
+
+response = app.invoke({"question": QUESTION})
+print("SQL:", response['sql_query'])
+db.run(response['sql_query'])
+
+
+# ## 5. Add a DataFrame Node to the Graph
+# Extend the graph state and add a node that executes the SQL and stores the result as a JSON-serializable DataFrame (records).
+
+
+class GraphState(TypedDict):
+    """Represents the state of our graph."""
+    question: str
+    sql_query: str
+    # New: DataFrame stored as records
+    data: dict
 
 
 # New: execute the SQL and store the result as a DataFrame
@@ -138,7 +182,7 @@ app = workflow.compile()
 app
 
 
-# ## 5. Testing the Graph
+# ## 6. Testing the Graph
 
 
 QUESTION = "Which 10 items have the highest total cumulative demand value?"
