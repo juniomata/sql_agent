@@ -1,98 +1,115 @@
+# # SQL Agent with LangGraph — Walmart Sales (Part 2)
+# **Goal:** Reinforce the LangGraph SQL agent pattern with additional Walmart Sales queries
 
-# LIBRARIES
+
+# ## Libraries
+
 
 from langchain_openai import ChatOpenAI
 from langchain_community.utilities import SQLDatabase
-from langchain.chains import create_sql_query_chain
+from langchain_classic.chains import create_sql_query_chain
 
-# * New: LangGraph
+# LangGraph
 from langgraph.graph import END, StateGraph
 from typing import TypedDict
 
 import pandas as pd
 import sqlalchemy as sql
 import os
+import re
 import yaml
 from pprint import pprint
 
-# * New: Import extract_sql_code (modular approach)
-from business_intelligence_agent.utils import extract_sql_code
+
+# ## AI Setup
 
 
-# AI SETUP
+os.environ["OPENAI_API_KEY"] = yaml.safe_load(open('credentials.yml'))['openai']
 
-os.environ["OPENAI_API_KEY"] = yaml.safe_load(open('../credentials.yml'))['openai']
+llm = ChatOpenAI(model="gpt-4o-mini")
 
-OPENAI_LLM = ChatOpenAI(
-    model = "gpt-4o-mini"
-)
 
-llm = OPENAI_LLM
+# ## 1.0 SQL Database Setup
 
-# SQL DATABASE SETUP
 
-PATH_DB = "sqlite:///database/leads_scored.db"
+PATH_DB = "sqlite:///data/walmart_sales.db"
 
 sql_engine = sql.create_engine(PATH_DB)
-
 conn = sql_engine.connect()
-
-# * AGENTS
-
-# * New: SQL Agent
 
 db = SQLDatabase.from_uri(PATH_DB)
 
+print("Tables:", db.get_usable_table_names())
+
+
+# ## 2.0 SQL Parsing Utility
+
+
+def extract_sql_code(text: str):
+    """Extract the SQL query from an LLM response. Returns None if not found."""
+    if not text:
+        return None
+    for pat in [
+        r"SQLQuery:\s*```sql\s*([\s\S]+?)```",
+        r"```sql\s*([\s\S]+?)```",
+        r"```[\w]*\s*(SELECT[\s\S]+?)```",
+        r"SQLQuery:\s*(SELECT[\s\S]+?)(?:\n\n|$)",
+        r"(SELECT[\s\S]+?)(?:;|\n\n|$)",
+    ]:
+        m = re.search(pat, text, re.IGNORECASE)
+        if m:
+            return m.group(1).strip().rstrip(";")
+    return None
+
+
+# ## 3.0 SQL Agent
+
+
 sql_generator = create_sql_query_chain(
-    llm = llm,
-    db = db,
-    k = 1e7, # * NEW: Set to 1e7 to avoid truncation
+    llm=llm,
+    db=db,
+    k=int(1e7),  # Set high to avoid LIMIT truncation
 )
 
 sql_generator
 
-response = sql_generator.invoke({"question": "which 10 customers have the highest p1 probability of purchase?"})
 
-pprint(extract_sql_code(response))
-
-pd.read_sql(extract_sql_code(response), conn)
-
-
-response = sql_generator.invoke({"question": "what tables are in the database?"})
-
-pprint(extract_sql_code(response))
-
-pd.read_sql(extract_sql_code(response), conn)
+# Test the SQL generator directly
+response = sql_generator.invoke({"question": "Which item had the single highest daily demand value, and on what date?"})
+sql_q = extract_sql_code(response)
+pprint(sql_q)
+pd.read_sql(sql_q, conn)
 
 
-# * LANGGRAPH
+response = sql_generator.invoke({"question": "How many unique items are in the daily_demand table?"})
+sql_q = extract_sql_code(response)
+pprint(sql_q)
+pd.read_sql(sql_q, conn)
+
+
+# ## 4.0 LangGraph Workflow
+
+
 class GraphState(TypedDict):
-    """
-    Represents the state of our graph.
-    """
+    """Represents the state of our graph."""
     question: str
-    sql_query : str
+    sql_query: str
 
 
 def generate_sql(state):
     print("---GENERATE SQL---")
     question = state.get("question")
-    
-    # Generate SQL
     sql_query = sql_generator.invoke({"question": question})
-    
-    # Extract SQL code
     sql_query = extract_sql_code(sql_query)
-    
     return {"sql_query": sql_query}
 
+
 def state_printer(state):
-    """print the state"""
+    """Print the state."""
     print("---STATE PRINTER---")
     print(f"question: {state.get('question')}")
     pprint(f"SQL Query:\n{state.get('sql_query')}")
 
-# * WORKFLOW DAG
 
 workflow = StateGraph(GraphState)
 
@@ -107,41 +124,31 @@ app = workflow.compile()
 app
 
 
-# * TESTING
-
-QUESTION = """
-Which 10 customers have the highest p1 probability of purchase?
-"""
-
-response = app.invoke({"question": QUESTION})
-
-response.keys()
-
-response['question']
-response['sql_query']
-
-db.run(response['sql_query'])
+# ## 5.0 Testing the Graph
 
 
-QUESTION = """
-Extract the transactions table. Return all rows.
-"""
-
+QUESTION = "What is the total demand value by year?"
 
 response = app.invoke({"question": QUESTION})
-response
+sql_q = response.get("sql_query")
+pprint(sql_q)
+pd.read_sql(sql_q, conn)
 
-response.get("sql_query")
 
-db.run(response.get("sql_query"))
+QUESTION = "What are the top 5 items by total demand value in 2015?"
 
-    
-QUESTION = """
-What are the total sales by month-year?
-"""
 response = app.invoke({"question": QUESTION})
-response
+sql_q = response.get("sql_query")
+pprint(sql_q)
+pd.read_sql(sql_q, conn)
 
-response.get("sql_query")
 
-db.run(response.get("sql_query"))
+QUESTION = "What is the average daily demand value for item FOODS_3_090 by year?"
+
+response = app.invoke({"question": QUESTION})
+sql_q = response.get("sql_query")
+pprint(sql_q)
+pd.read_sql(sql_q, conn)
+
+
+conn.close()

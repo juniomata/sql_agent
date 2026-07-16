@@ -1,109 +1,127 @@
-# LIBRARIES
+# # LangGraph SQL Agent + Pandas — Walmart Sales
+# **Goal:** Extend the LangGraph SQL agent with a node that executes the SQL and returns a Pandas DataFrame
+
+
+# ## Libraries
+
 
 from langchain_openai import ChatOpenAI
 from langchain_community.utilities import SQLDatabase
-from langchain.chains import create_sql_query_chain
+from langchain_classic.chains import create_sql_query_chain
 
+# LangGraph
 from langgraph.graph import END, StateGraph
 from typing import TypedDict
 
+import pandas as pd
+import sqlalchemy as sql
 import os
+import re
 import yaml
 from pprint import pprint
 
-# * New: Execute SQL Code with pd.read_sql
-import pandas as pd
-import sqlalchemy as sql
 
-from business_intelligence_agent.utils import extract_sql_code
+# ## AI Setup
 
-# AI SETUP
 
-os.environ["OPENAI_API_KEY"] = yaml.safe_load(open('../credentials.yml'))['openai']
+os.environ["OPENAI_API_KEY"] = yaml.safe_load(open('credentials.yml'))['openai']
 
-OPENAI_LLM = ChatOpenAI(
-    model = "gpt-4o-mini"
-)
+llm = ChatOpenAI(model="gpt-4o-mini")
 
-llm = OPENAI_LLM
 
-# SQL DATABASE SETUP
+# ## 1.0 SQL Database Setup
 
-PATH_DB = "sqlite:///database/leads_scored.db"
+
+PATH_DB = "sqlite:///data/walmart_sales.db"
 
 sql_engine = sql.create_engine(PATH_DB)
-
 conn = sql_engine.connect()
-
-
-# * AGENTS
-
-# * SQL Agent
 
 db = SQLDatabase.from_uri(PATH_DB)
 
+print("Tables:", db.get_usable_table_names())
+
+
+# ## 2.0 SQL Parsing Utility
+
+
+def extract_sql_code(text: str):
+    """Extract the SQL query from an LLM response. Returns None if not found."""
+    if not text:
+        return None
+    for pat in [
+        r"SQLQuery:\s*```sql\s*([\s\S]+?)```",
+        r"```sql\s*([\s\S]+?)```",
+        r"```[\w]*\s*(SELECT[\s\S]+?)```",
+        r"SQLQuery:\s*(SELECT[\s\S]+?)(?:\n\n|$)",
+        r"(SELECT[\s\S]+?)(?:;|\n\n|$)",
+    ]:
+        m = re.search(pat, text, re.IGNORECASE)
+        if m:
+            return m.group(1).strip().rstrip(";")
+    return None
+
+
+# ## 3.0 SQL Agent + DataFrame Conversion
+
+
 sql_generator = create_sql_query_chain(
-    llm = llm,
-    db = db,
-    k = int(1e7)
+    llm=llm,
+    db=db,
+    k=int(1e7),  # Set high to avoid LIMIT truncation
 )
 
 sql_generator
 
-# * NEW: Dataframe Conversion
 
-response = sql_generator.invoke({"question": "which 10 customers have the highest p1 probability of purchase?"})
+# New: convert the SQL result to a Pandas DataFrame
+response = sql_generator.invoke({"question": "Which 10 items have the highest total cumulative demand value?"})
 
 df = pd.read_sql(extract_sql_code(response), conn)
-
 df
 
+
+# df.to_dict(orient="records") is JSON serializable — safe to store in graph state
 df.to_dict(orient="records")
+
 
 pd.DataFrame(df.to_dict(orient="records"))
 
-# * LANGGRAPH
+
+# ## 4.0 LangGraph Workflow
+
+
 class GraphState(TypedDict):
-    """
-    Represents the state of our graph.
-    """
+    """Represents the state of our graph."""
     question: str
-    sql_query : str
-    # * New: Data Frame
-    data: dict 
+    sql_query: str
+    # New: DataFrame stored as records
+    data: dict
 
 
 def generate_sql(state):
     print("---GENERATE SQL---")
     question = state.get("question")
-    
-    # Generate SQL
     sql_query = sql_generator.invoke({"question": question})
-    
-    # Extract SQL code
     sql_query = extract_sql_code(sql_query)
-    
     return {"sql_query": sql_query}
 
-# * New: Create Data Frame
+
+# New: execute the SQL and store the result as a DataFrame
 def convert_dataframe(state):
     print("---CONVERT DATA FRAME---")
-
     sql_query = state.get("sql_query")
-    
     df = pd.read_sql(sql_query, conn)
-    
-    return {"data": df.to_dict(orient="records")} # df.to_dict(orient="records") is JSON serializable
-  
-    
+    return {"data": df.to_dict(orient="records")}
+
+
 def state_printer(state):
-    """print the state"""
+    """Print the state."""
     print("---STATE PRINTER---")
     print(f"question: {state.get('question')}")
     pprint(f"SQL Query: {state.get('sql_query')}")
     print(f"Data: {pd.DataFrame(state.get('data')).to_string()}")
 
-# * WORKFLOW DAG
 
 workflow = StateGraph(GraphState)
 
@@ -112,73 +130,42 @@ workflow.add_node("convert_dataframe", convert_dataframe)
 workflow.add_node("state_printer", state_printer)
 
 workflow.set_entry_point("generate_sql")
-
-# * New: Add Edge
 workflow.add_edge("generate_sql", "convert_dataframe")
 workflow.add_edge("convert_dataframe", "state_printer")
-
 workflow.add_edge("state_printer", END)
 
 app = workflow.compile()
-
 app
 
-# * TESTING
 
-QUESTION = """
-Which 10 customers have the highest p1 probability of purchase?
-"""
+# ## 5.0 Testing the Graph
 
-response = app.invoke({"question": QUESTION})
 
-response.keys()
-
-pd.DataFrame(response.get("data"))
-
-# expect error due to pandas conversion only allowed on 1 table at a time
-QUESTION = """
-What are the first five rows of each table?
-"""
+QUESTION = "Which 10 items have the highest total cumulative demand value?"
 
 response = app.invoke({"question": QUESTION})
-
-response.keys()
-
 pd.DataFrame(response.get("data"))
-    
-    
-QUESTION = """
-What are the names of each table?
-"""
+
+
+QUESTION = "What are the names of each table in the database?"
 
 response = app.invoke({"question": QUESTION})
-
-response.keys()
-
 pd.DataFrame(response.get("data"))
-    
-    
-QUESTION = """
-Extract the transactions table. Return all rows.
-"""
+
+
+QUESTION = "Extract the first 20 rows for item FOODS_3_090 from the daily_demand table, ordered by date."
 
 response = app.invoke({"question": QUESTION})
-
-response.keys()
-
 pd.DataFrame(response.get("data"))
-    
 
-# Note - May need to use gpt-4o or gpt-4.1
 
-QUESTION = """
-What are the total sales by month-year - multiply quantity by price?
-"""
+QUESTION = "What is the total demand value by year-month? Order chronologically."
 
 response = app.invoke({"question": QUESTION})
-
-response.keys()
-
 pd.DataFrame(response.get("data"))
+
 
 pprint(response.get("sql_query"))
+
+
+conn.close()
